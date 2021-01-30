@@ -5,8 +5,16 @@
   >
     <div
       class="h-1 w-1 rounded-full bg-white bg-opacity-90"
-      style="margin: 0;"
+      style="margin: 0!important;"
     ></div>
+    <donkeytail-modal
+      v-if="wysiwyg"
+      :label="pin.label"
+      :description="pin.description"
+      parent="pin"
+      @updated="updated($event)"
+      @deleted="deleted($event)"
+    ></donkeytail-modal>
   </div>
 </template>
 
@@ -14,8 +22,9 @@
 import Draggabilly from 'draggabilly'
 import tippy from 'tippy.js'
 import 'tippy.js/dist/tippy.css'
+import 'tippy.js/themes/light-border.css'
 export default {
-  props: ['canvas-id', 'pin'],
+  props: ['canvas-id', 'pin', 'wysiwyg'],
   data() {
     return {
       draggie: null,
@@ -35,6 +44,12 @@ export default {
       const yPos = (this.position.y * canvasHeight) / 100
       this.draggie.setPosition(xPos, yPos)
     },
+    updated(event) {
+      this.$emit('updated', { id: this.pin.id, ...event })
+    },
+    deleted(event) {
+      this.$emit('deleted', { id: this.pin.id })
+    },
   },
   mounted() {
     const self = this
@@ -46,10 +61,13 @@ export default {
     this.draggie = new Draggabilly(this.$refs.pin, {
       containment: self.canvas,
     })
-    tippy(self.$refs.pin, {
-      content: self.pin.label,
-      moveTransition: 'transform 0.35s ease-in-out',
-    })
+
+    if (!self.wysiwyg) {
+      tippy(self.$refs.pin, {
+        content: self.pin.label,
+        moveTransition: 'transform 0.35s ease-in-out',
+      })
+    }
 
     if (this.position.x !== 0 || this.position.y !== 0) {
       this.setPosition()

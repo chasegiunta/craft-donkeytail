@@ -46,6 +46,11 @@
             }
         ] %}
 
+        {% set options = options|merge([{
+            label: 'WYSIWYG',
+            value: 'WYSIWYG'
+        }]) %}
+
         {% if entrySources %}
             {% set options = options|merge([{
                 label: 'Entries',

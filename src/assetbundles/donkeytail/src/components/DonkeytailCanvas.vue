@@ -1,46 +1,71 @@
 <template>
-  <div
-    :id="`${namespacedId}-canvas`"
-    ref="canvas"
-    class="rounded leading-0 overflow-hidden relative"
-  >
-    <img ref="image" :src="canvasUrl" class="w-full" />
-    <div v-if="showPins">
-      <donkeytail-pin
-        v-for="pin in pins"
-        :key="`pin-${pin.id}`"
-        :pin="pin"
-        :canvas-id="`${namespacedId}-canvas`"
-        @positioned="setPinPosition($event)"
-      ></donkeytail-pin>
-    </div>
-    <div v-for="pin in pins" :key="`pinput-${pin.id}`">
-      <input type="hidden" :name="`${name}[meta][${pin.id}]`" />
-      <input
-        type="hidden"
-        :name="`${name}[meta][${pin.id}][id]`"
-        :value="pin.id"
-      />
-      <input
-        type="hidden"
-        :name="`${name}[meta][${pin.id}][label]`"
-        :value="pin.label"
-      />
-      <input
-        type="hidden"
-        :name="`${name}[meta][${pin.id}][x]`"
-        :value="pin.x"
-      />
-      <input
-        type="hidden"
-        :name="`${name}[meta][${pin.id}][y]`"
-        :value="pin.y"
-      />
+  <div>
+    <button v-if="wysiwyg == true" type="button" class="btn mb-2" ref="addBtn">
+      Add Pin
+    </button>
+
+    <donkeytail-modal
+      v-if="wysiwyg == true"
+      parent="canvas"
+      @added="addPin($event)"
+    ></donkeytail-modal>
+    <div
+      :id="`${namespacedId}-canvas`"
+      ref="canvas"
+      class="rounded leading-0 relative"
+      :class="wysiwyg ? '' : 'overflow-hidden'"
+    >
+      <img ref="image" :src="canvasUrl" class="w-full" />
+      <div v-if="showPins">
+        <donkeytail-pin
+          v-for="pin in pins"
+          :key="`pin-${pin.id}`"
+          :pin="pin"
+          :canvas-id="`${namespacedId}-canvas`"
+          @positioned="setPinPosition($event)"
+          @updated="updated($event)"
+          @deleted="deleted($event)"
+          :wysiwyg="wysiwyg"
+        ></donkeytail-pin>
+      </div>
+      <div v-for="pin in pins" :key="`pinput-${pin.id}`">
+        <input type="hidden" :name="`${name}[meta][${pin.id}]`" />
+        <input
+          type="hidden"
+          :name="`${name}[meta][${pin.id}][id]`"
+          :value="pin.id"
+        />
+        <input
+          type="hidden"
+          :name="`${name}[meta][${pin.id}][label]`"
+          :value="pin.label"
+        />
+        <input
+          type="hidden"
+          v-if="wysiwyg"
+          :name="`${name}[meta][${pin.id}][description]`"
+          :value="pin.description"
+        />
+        <input
+          type="hidden"
+          :name="`${name}[meta][${pin.id}][x]`"
+          :value="pin.x"
+        />
+        <input
+          type="hidden"
+          :name="`${name}[meta][${pin.id}][y]`"
+          :value="pin.y"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <script>
+// import tippy from 'tippy.js'
+// import 'tippy.js/dist/tippy.css'
+// import 'tippy.js/themes/light-border.css'
+
 export default {
   props: {
     namespacedId: {
@@ -57,15 +82,29 @@ export default {
     meta: {
       type: [Object, Array],
     },
+    wysiwyg: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
       canvasUrl: false,
       showPins: false,
       pins: [],
+      tippy: null,
     }
   },
   methods: {
+    addPin($event) {
+      this.pins.push({
+        id: Math.floor(Math.random() * 999999),
+        label: $event.label,
+        description: $event.description,
+        x: 50,
+        y: 50,
+      })
+    },
     getCanvasUrl(assetId) {
       const self = this
       window
@@ -105,9 +144,21 @@ export default {
       let pinToUpdate = this.pins.findIndex(x => x.id === payload.id)
       Object.assign(this.pins[pinToUpdate], payload)
     },
+    updated(payload) {
+      let pinToUpdate = this.pins.findIndex(x => x.id === payload.id)
+      this.$set(this.pins, pinToUpdate, {
+        ...this.pins[pinToUpdate],
+        ...payload,
+      })
+    },
+    deleted(payload) {
+      let pinToDelete = this.pins.findIndex(x => x.id === payload.id)
+      this.$delete(this.pins, pinToDelete)
+    },
   },
   mounted() {
     const self = this
+
     // If we already have a canvas asset ID, download it and plot it now
     // Perf TODO: Do this in Twig
     if (self.value) {

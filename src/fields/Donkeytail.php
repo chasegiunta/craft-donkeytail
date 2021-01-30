@@ -393,71 +393,83 @@ class Donkeytail extends Field
             $canvasElements = [Craft::$app->getAssets()->getAssetById($value['canvasId'][0])];
         }
 
-        $pinElementType = null;
-        $commerceElementType = false;
-        if ($pinElementType = $this->pinElementType) {
-            if (in_array($pinElementType, ['Product', 'Variant'])) {
-                $commerceElementType = true;
-                $pinElementType = "craft\\commerce\\elements\\$pinElementType";
-            } else {
-                $pinElementType = "craft\\elements\\$pinElementType";
+        if ($pinElementType = $this->pinElementType == 'WYSIWYG') {
+            $meta = [];
+            if ($value->meta) {
+                $meta = $value->meta;
             }
-        }
-
-        $findPins = true;
-        // Ensure Commerce is enabled before trying to find elements for it
-        if ($commerceElementType == true && !Craft::$app->plugins->isPluginEnabled('commerce')) {
-            $findPins = false;
-        }
-
-        // Set pin elements
-        $pinElements = [];
-        $meta = [];
-        if ($findPins == true && $value['pinIds'] && is_array($value['pinIds'])) {
-            foreach ($value['pinIds'] as $pinId) {
-                $pinElement = Craft::$app->getElements()->getElementById($pinId, $pinElementType);
-                if ($pinElement) {
-                    // If element exists, show it
-                    array_push($pinElements, $pinElement);
-                    
-                    // Ensure label for pin element is up to date
-                    if ($this->pinElementType == 'User') {
-                        $value->meta[$pinElement->id]['label'] = $pinElement->username; 
-                    } else {
-                        $value->meta[$pinElement->id]['label'] = $pinElement->title;
-                    }
-
-                    // Only include meta for elements that exist
-                    array_push($meta, $value->meta[$pinElement->id]);
+            // $value->meta[$pinElement->id]['label'] = $pinElement->title;
+        } else {
+            $pinElementType = null;
+            $commerceElementType = false;
+            if ($pinElementType = $this->pinElementType) {
+                if (in_array($pinElementType, ['Product', 'Variant'])) {
+                    $commerceElementType = true;
+                    $pinElementType = "craft\\commerce\\elements\\$pinElementType";
+                } else {
+                    $pinElementType = "craft\\elements\\$pinElementType";
                 }
             }
+
+            $findPins = true;
+            // Ensure Commerce is enabled before trying to find elements for it
+            if ($commerceElementType == true && !Craft::$app->plugins->isPluginEnabled('commerce')) {
+                $findPins = false;
+            }
+
+            // Set pin elements
+            $pinElements = [];
+            $meta = [];
+            if ($findPins == true && $value['pinIds'] && is_array($value['pinIds'])) {
+                foreach ($value['pinIds'] as $pinId) {
+                    $pinElement = Craft::$app->getElements()->getElementById($pinId, $pinElementType);
+                    if ($pinElement) {
+                        // If element exists, show it
+                        array_push($pinElements, $pinElement);
+                        
+                        // Ensure label for pin element is up to date
+                        if ($this->pinElementType == 'User') {
+                            $value->meta[$pinElement->id]['label'] = $pinElement->username; 
+                        } else {
+                            $value->meta[$pinElement->id]['label'] = $pinElement->title;
+                        }
+
+                        // Only include meta for elements that exist
+                        array_push($meta, $value->meta[$pinElement->id]);
+                    }
+                }
+            }
+
+            // Set element sources and use Entry as fallback
+            $pinElementSources = $this->pinElementType ? strtolower($this->pinElementType).'Sources' : 'entrySources';
         }
 
-        // Set element sources and use Entry as fallback
-        $pinElementSources = $this->pinElementType ? strtolower($this->pinElementType).'Sources' : 'entrySources';
+        $returnArray = [
+            'name' => $this->handle,
+            'value' => $value,
+            'field' => $this,
+            'id' => $id,
+            'namespacedId' => $namespacedId,
+            'element' => $element,
+
+            'canvasSourceExists' => count(Craft::$app->getAssets()->findFolders()),
+            'canvasElements' => $canvasElements,
+            'canvasElementType' => Asset::class,
+            'canvasSources' => $this->canvasSources,
+            
+            'pinElementType' => $pinElementType,
+
+            'meta' => json_encode($meta),
+        ];
+
+        if ($pinElementType != 'WYSIWYG') {
+            $returnArray['pinElements'] = $pinElements;
+            $returnArray['pinElementSources'] = $this->{$pinElementSources} ? $this->{$pinElementSources} : null;
+        }
 
         // Render the input template
         return Craft::$app->getView()->renderTemplate(
-            'donkeytail/_components/fields/Donkeytail_input',
-            [
-                'name' => $this->handle,
-                'value' => $value,
-                'field' => $this,
-                'id' => $id,
-                'namespacedId' => $namespacedId,
-                'element' => $element,
-
-                'canvasSourceExists' => count(Craft::$app->getAssets()->findFolders()),
-                'canvasElements' => $canvasElements,
-                'canvasElementType' => Asset::class,
-                'canvasSources' => $this->canvasSources,
-
-                'pinElementType' => $pinElementType,
-                'pinElementSources' => $this->{$pinElementSources} ? $this->{$pinElementSources} : null,
-                'pinElements' => $pinElements,
-
-                'meta' => json_encode($meta),
-            ]
+            'donkeytail/_components/fields/Donkeytail_input', $returnArray
         );
     }
 

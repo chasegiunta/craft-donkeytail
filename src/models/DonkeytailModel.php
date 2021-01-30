@@ -18,6 +18,7 @@ use craft\base\Model;
 use craft\services\Elements;
 use craft\elements\Entry;
 use simplygoodwork\donkeytail\models\PinModel;
+use simplygoodwork\donkeytail\fields\Donkeytail as DonkeytailField;
 
 /**
  * DonkeytailModel Model
@@ -123,23 +124,39 @@ class DonkeytailModel extends Model
     {   
         $pins = [];
 
-        $elementTypeClass = $this->getPinsElementType();
-        if (!$elementTypeClass) return $pins;
+        $firstKey = array_key_first($this->meta);
+        $wysiwyg = array_key_exists('description', $this->meta[$firstKey]);
 
-        $query = $elementTypeClass::find();
-        $criteria = [
-            'id' => $this->pinIds
-        ];
-        Craft::configure($query, $criteria);
-        $queryAll = $query->all();
+        if ($wysiwyg == true) {
+            foreach ($this->meta as $key => $item) {
+                $pin = new PinModel();
+                $pinMeta = $this->meta[$key];
+                $pin->title = $pinMeta['label'];
+                $pin->description = $pinMeta['description'];
+                $pin->x = $pinMeta['x'];
+                $pin->y = $pinMeta['y'];
+                array_push($pins, $pin);
+            }
+        } else {
+            $elementTypeClass = $this->getPinsElementType();
+        
+            if (!$elementTypeClass) return $pins;
+    
+            $query = $elementTypeClass::find();
+            $criteria = [
+                'id' => $this->pinIds
+            ];
+            Craft::configure($query, $criteria);
+            $queryAll = $query->all();
 
-        foreach ($queryAll as $key => $element) {
-            $pinMeta = $this->meta[$element->id];
-            $pin = new PinModel();
-            $pin->element = $element;
-            $pin->x = $pinMeta['x'];
-            $pin->y = $pinMeta['y'];
-            array_push($pins, $pin);
+            foreach ($queryAll as $key => $element) {
+                $pinMeta = $this->meta[$element->id];
+                $pin = new PinModel();
+                $pin->element = $element;
+                $pin->x = $pinMeta['x'];
+                $pin->y = $pinMeta['y'];
+                array_push($pins, $pin);
+            }
         }
 
         return $pins;

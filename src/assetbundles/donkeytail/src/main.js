@@ -3,6 +3,7 @@ __webpack_public_path__ = 'http://localhost:8080/' // eslint-disable-line
 import Vue from 'vue'
 import DonkeytailCanvas from './components/DonkeytailCanvas.vue'
 import DonkeytailPin from './components/DonkeytailPin.vue'
+import DonkeytailModal from './components/DonkeytailModal.vue'
 import './app.css'
 import 'alpinejs'
 
@@ -12,6 +13,7 @@ const VueDonkeytailPlugin = {
   install(Vue) {
     Vue.component('donkeytail-canvas', DonkeytailCanvas)
     Vue.component('donkeytail-pin', DonkeytailPin)
+    Vue.component('donkeytail-modal', DonkeytailModal)
   },
 }
 

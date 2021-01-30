@@ -46,6 +46,10 @@ class PinModel extends Model
 
     public $y = '';
 
+    public $title = '';
+
+    public $description = '';
+
     // Public Methods
     // =========================================================================
 
@@ -65,6 +69,8 @@ class PinModel extends Model
             ['element', 'object'],
             ['x', 'string'],
             ['y', 'string'],
+            ['title', 'string'],
+            ['description', 'string'],
         ];
     }
 

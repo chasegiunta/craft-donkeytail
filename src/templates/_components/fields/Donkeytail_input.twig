@@ -53,27 +53,29 @@
     {% endif %}
   {% endif %}
 
-  <div id="{{ id }}-pane" class="pane flex flex-wrap items-start overflow-hidden 2xl:!flex-no-wrap" {{ value.canvasId|length or autoSelected ? : "style='height: 0; opacity: 0; padding: 0;'" }}>
+  <div id="{{ id }}-pane" class="pane flex flex-wrap items-start {{pinElementType != 'WYSIWYG' ? 'overflow-hidden' }} 2xl:!flex-no-wrap" {{ value.canvasId|length or autoSelected ? : "style='height: 0; opacity: 0; padding: 0;'" }}>
     <div>
-      {% if pinElementSources|length %}
-        {{ 
-          forms.elementSelectField({
-            elements: (pinElements is defined and pinElements ? [pinElements][0]),
-            id: id ~ '-pins',
-            name: name ~ '[pinIds]',
-            label: 'Pins' |t,
-            elementType: pinElementType,
-            criteria: {
-              'enabledForSite': null,
-            },
-            sources: pinElementSources,
-            jsClass: 'Craft.BaseElementSelectInput',
-            selectionLabel: "Add #{pinElementType|split('\\')|last}" |t,
-            class: 'm-10'
-          })
-        }}
-      {% else %}
-        <p class="error whitespace-normal">No {{ pinElementType|split('\\')|last|lower }} sources specified.</p>
+      {% if pinElementSources is defined %}
+        {% if pinElementSources|length %}
+          {{ 
+            forms.elementSelectField({
+              elements: (pinElements is defined and pinElements ? [pinElements][0]),
+              id: id ~ '-pins',
+              name: name ~ '[pinIds]',
+              label: 'Pins' |t,
+              elementType: pinElementType,
+              criteria: {
+                'enabledForSite': null,
+              },
+              sources: pinElementSources,
+              jsClass: 'Craft.BaseElementSelectInput',
+              selectionLabel: "Add #{pinElementType|split('\\')|last}" |t,
+              class: 'm-10'
+            })
+          }}
+        {% else %}
+          <p class="error whitespace-normal">No {{ pinElementType|split('\\')|last|lower }} sources specified.</p>
+        {% endif %}
       {% endif %}
     </div>
 
@@ -84,6 +86,7 @@
         namespaced-id="{{ namespacedId }}"
         :value="{{ canvasElement[0].id ?? 0 }}"
         :meta="{{ meta ?? [] }}"
+        :wysiwyg="{{pinElementType == 'WYSIWYG' ? 'true' : 'false' }}"
         >
       </donkeytail-canvas>
     </div>
@@ -96,6 +99,7 @@
     <p class="error">No assets sources currently exist.</p>
   {% endif %}
 {% endif %}
+
 
 {% css %}
 @media screen and (min-width: 1600px) {

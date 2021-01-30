@@ -16,6 +16,7 @@ use craft\web\AssetBundle;
 use craft\web\assets\cp\CpAsset;
 use craft\web\assets\vue\VueAsset;
 use craft\web\assets\axios\AxiosAsset;
+use craft\redactor\assets\redactor\RedactorAsset;
 
 /**
  * DonkeytailAsset AssetBundle
@@ -52,7 +53,8 @@ class DonkeytailAsset extends AssetBundle
         $this->depends = [
             CpAsset::class,
             VueAsset::class,
-            AxiosAsset::class
+            AxiosAsset::class,
+            RedactorAsset::class
         ];
 
         // define the relative path to CSS/JS files that should be registered with the page
