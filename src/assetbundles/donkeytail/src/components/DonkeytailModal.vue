@@ -104,7 +104,7 @@ export default {
       hideOnClick: 'toggle',
       interactive: true,
       maxWidth: 600,
-      zIndex: 1000,
+      zIndex: 101,
       onClickOutside(instance, event) {
         console.log(event)
         instance.hide()
