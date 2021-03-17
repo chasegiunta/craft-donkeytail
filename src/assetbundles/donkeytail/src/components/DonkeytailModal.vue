@@ -107,6 +107,12 @@ export default {
       zIndex: 101,
       onClickOutside(instance, event) {
         console.log(event)
+        if (
+          event.target.closest(
+            '.redactor-modal, .redactor-dropdown, .redactor-modal-box',
+          )
+        )
+          return
         instance.hide()
       },
       onShown() {
